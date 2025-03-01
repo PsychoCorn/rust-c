@@ -144,6 +144,11 @@ impl File {
 
         if res < 0 { None } else { Some(res as isize) }
     }
+
+    pub fn rewind(&mut self) -> Option<()> {
+        self.seek(0, Origin::Beginning)?;
+        Some(())
+    }
 }
 
 impl Drop for File {
