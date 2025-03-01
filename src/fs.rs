@@ -37,18 +37,49 @@ impl OpenFlags {
     flags_fn!(create: libc::O_CREAT);
     flags_fn!(excl: libc::O_EXCL);
     flags_fn!(append: libc::O_APPEND);
-    flags_fn!(binary: libc::O_BINARY);
-    flags_fn!(no_inherit: libc::O_NOINHERIT);
     flags_fn!(trunc: libc::O_TRUNC);
+
+    // Windows-specific flags
+    #[cfg(windows)]
+    flags_fn!(binary: libc::O_BINARY);
+    #[cfg(windows)]
+    flags_fn!(no_inherit: libc::O_NOINHERIT);
+    #[cfg(windows)]
     flags_fn!(random: libc::O_RANDOM);
+    #[cfg(windows)]
     flags_fn!(raw: libc::O_RAW);
+    #[cfg(windows)]
     flags_fn!(sequential: libc::O_SEQUENTIAL);
+    #[cfg(windows)]
     flags_fn!(temporary: libc::O_TEMPORARY);
+    #[cfg(windows)]
     flags_fn!(ansi: libc::O_TEXT);
+    #[cfg(windows)]
     flags_fn!(unicode: libc::_O_WTEXT);
+    #[cfg(windows)]
     flags_fn!(utf8: libc::_O_U8TEXT);
+    #[cfg(windows)]
     flags_fn!(utf16: libc::_O_U16TEXT);
+    #[cfg(windows)]
     flags_fn!(short_lived: libc::_O_SHORT_LIVED);
+
+    // Unix-specific flags
+    #[cfg(unix)]
+    flags_fn!(cloexec: libc::O_CLOEXEC);
+    #[cfg(unix)]
+    flags_fn!(directory: libc::O_DIRECTORY);
+    #[cfg(unix)]
+    flags_fn!(no_follow: libc::O_NOFOLLOW);
+    #[cfg(unix)]
+    flags_fn!(dsync: libc::O_DSYNC);
+    #[cfg(unix)]
+    flags_fn!(sync: libc::O_SYNC);
+    #[cfg(unix)]
+    flags_fn!(rsync: libc::O_RSYNC);
+    #[cfg(unix)]
+    flags_fn!(no_atime: libc::O_NOATIME);
+    #[cfg(unix)]
+    flags_fn!(path: libc::O_PATH);
 }
 
 #[repr(i32)]

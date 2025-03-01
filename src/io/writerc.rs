@@ -20,12 +20,12 @@ impl CWriter {
 
 impl core::fmt::Write for CWriter {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        let count = s.len() as u32;
+        let count = s.len() as c_uint;
         let buf = s.as_ptr() as *const c_void;
         let bytes_written = unsafe {
-            libc::write(self.fd, buf, count)
+            write(self.fd, buf, count)
         };
-        if bytes_written == -1 || bytes_written as u32 != count {
+        if bytes_written == -1 || bytes_written as c_uint != count {
             Err(core::fmt::Error)
         } else {
             Ok(())
