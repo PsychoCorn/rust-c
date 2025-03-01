@@ -1,5 +1,6 @@
 use core::fmt::Write;
 
+use alloc::vec::Vec;
 use libc::{close, lseek64, open};
 
 use crate::io::{CWriter, Read};
@@ -63,8 +64,10 @@ pub struct File {
 }
 
 impl File {
-
-    pub fn open(path: &str, flags: OpenFlags) -> Option<Self> {
+    const MAX_BUF_STACK_SIZE: usize = 256;
+    /// # Safety
+    /// path must be null-terminated
+    pub unsafe fn open_nt(path: &[u8], flags: OpenFlags) -> Option<Self> {
         let path = path.as_ptr() as *const c_char;
         let fd = unsafe {
             open(path, flags.flags)
@@ -73,6 +76,33 @@ impl File {
             None 
         } else {
             Some(Self { fd })
+        }
+    }
+
+    fn open_no_alloc(path: &[u8], flags: OpenFlags) -> Option<Self> {
+        let mut buf = [0u8; File::MAX_BUF_STACK_SIZE];
+        buf[..path.len()].copy_from_slice(path);
+        buf[path.len()] = 0;
+        unsafe { File::open_nt(&buf, flags) }
+    }
+
+    fn open_alloc(path: &[u8], flags: OpenFlags) -> Option<Self> {
+        let mut buf = Vec::with_capacity(path.len() + 1);
+        buf.extend_from_slice(path);
+        buf.push(0);
+        unsafe { File::open_nt(&buf, flags) }
+    }
+
+    pub fn open<P: AsRef<[u8]>>(path: P, flags: OpenFlags) -> Option<Self> {
+        let path = path.as_ref();
+        if *path.last()? == 0 {
+            unsafe { File::open_nt(path, flags) }
+        } else {
+            if path.len() < File::MAX_BUF_STACK_SIZE {
+                File::open_no_alloc(path, flags)
+            } else {
+                File::open_alloc(path, flags)
+            }
         }
     }
 
