@@ -23,6 +23,36 @@ macro_rules! flags_fn {
 
 impl OpenFlags {
 
+    fn parse_mode(mode: &[u8]) -> Self {
+        let mut flags = OpenFlags::new();
+
+        for ch in mode {
+            match *ch {
+                b'r' => {
+                    flags = flags.read_only();
+                }
+                b'w' => {
+                    flags = flags.write_only().create().trunc();
+                }
+                b'a' => {
+                    flags = flags.write_only().create().append();
+                }
+                b'+' => {
+                    flags = flags.read_write();
+                }
+                #[cfg(windows)]
+                b'b' => {
+                    flags = flags.binary();
+                }
+                _ => {
+                    // Игнорируем неизвестные символы
+                }
+            }
+        }
+
+        flags
+    }
+
     pub fn with_flags(flags: c_int) -> Self {
         Self { flags }
     }
@@ -80,6 +110,12 @@ impl OpenFlags {
     flags_fn!(no_atime: libc::O_NOATIME);
     #[cfg(unix)]
     flags_fn!(path: libc::O_PATH);
+}
+
+impl<T: AsRef<[u8]>> From<T> for OpenFlags {
+    fn from(value: T) -> Self {
+        OpenFlags::parse_mode(value.as_ref())
+    }
 }
 
 #[repr(i32)]
