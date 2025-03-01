@@ -1,20 +1,28 @@
+use core::str::Utf8Error;
+
 use alloc::{string::{FromUtf8Error, String}, vec::Vec};
 use libc::read;
 
 #[derive(Debug)]
 pub struct Error {
-    buf: Vec<u8>
+    buf: Vec<u8>,
+    utf8_error: Option<Utf8Error>
 }
 
 impl Error {
     pub fn into_bytes(self) -> Vec<u8> {
         self.buf
     }
+
+    pub fn utf8_error(&self) -> Option<Utf8Error> {
+        self.utf8_error
+    }
 }
 
 impl From<FromUtf8Error> for Error {
     fn from(value: FromUtf8Error) -> Self {
         Self {
+            utf8_error: Some(value.utf8_error()),
             buf: value.into_bytes()
         }
     }
@@ -26,7 +34,9 @@ pub trait Read {
     fn read_bytes(&self, buf: &mut [u8]) -> Option<usize>;
 
     fn read_str(&self, mut buf: Vec<u8>) -> Result<String> {
-        let Some(len) = self.read_bytes(&mut buf) else { return Err(Error { buf }) };
+        let Some(len) = self.read_bytes(&mut buf) else { 
+            return Err(Error { buf, utf8_error: None }) 
+        };
         buf.truncate(len);
         Ok(String::from_utf8(buf)?)
     }
